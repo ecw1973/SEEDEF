@@ -1,8 +1,8 @@
-﻿#region snippet_MainWindowClass
-
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
+using HubServiceApi;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace SignalRChatClient
@@ -21,46 +21,46 @@ namespace SignalRChatClient
         {
             InitializeComponent();
 
-            connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:64882/ChatHub")
-                .Build();
+            connection = new HubConnectionBuilder().WithUrl(Strings.TestHubUrl).Build();
 
-            #region snippet_ClosedRestart
 
+
+            // Reconnect Attempt....
             connection.Closed += async error =>
             {
                 await Task.Delay(new Random().Next(0, 5) * 1000);
                 await connection.StartAsync();
             };
-
-            #endregion
         }
 
         #endregion
 
-        #region Event Handlers
-
         private async void connectButton_Click(object sender, RoutedEventArgs e)
         {
-            #region snippet_ConnectionOn
-
-            connection.On<string, string>("ReceiveMessage", (user, message) =>
+            connection.On<DateTime>(Strings.Events.TimeReceived, (dateTime) =>
             {
                 Dispatcher.Invoke(() =>
                 {
-                    string newMessage = $"{user}: {message}";
-                    messagesList.Items.Add(newMessage);
+                    string item = "Type: " + dateTime.GetType().Name + " Value: " + dateTime;
+                    messagesList.Items.Add(item);
                 });
             });
 
-            #endregion
+            connection.On<List<int>>(Strings.Events.ListOfIntReceived, (listOfInt) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    string item = "Type: " + listOfInt.GetType().Name + " Value: " + String.Join(",", listOfInt);
+                    messagesList.Items.Add(item);
+                });
+            });
 
             try
             {
                 await connection.StartAsync();
                 messagesList.Items.Add("Connection started");
                 connectButton.IsEnabled = false;
-                sendButton.IsEnabled = true;
+                disconnectButton.IsEnabled = true;
             }
             catch (Exception ex)
             {
@@ -68,29 +68,39 @@ namespace SignalRChatClient
             }
         }
 
-        private async void sendButton_Click(object sender, RoutedEventArgs e)
+        private async void disconnectButton_Click(object sender, RoutedEventArgs e)
         {
-            #region snippet_ErrorHandling
-
             try
             {
-                #region snippet_InvokeAsync
-
-                await connection.InvokeAsync("SendMessage",
-                    userTextBox.Text, messageTextBox.Text);
-
-                #endregion
+                messagesList.Items.Clear();
+                await connection.StopAsync();
+                connectButton.IsEnabled = true;
             }
             catch (Exception ex)
             {
                 messagesList.Items.Add(ex.Message);
             }
-
-            #endregion
         }
 
-        #endregion
+        //private async void sendButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    #region snippet_ErrorHandling
+
+        //    try
+        //    {
+        //        #region snippet_InvokeAsync
+
+        //        await connection.InvokeAsync("SendMessage",
+        //            userTextBox.Text, messageTextBox.Text);
+
+        //        #endregion
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        messagesList.Items.Add(ex.Message);
+        //    }
+
+        //    #endregion
+        //}
     }
 }
-
-#endregion

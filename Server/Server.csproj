@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HubServiceInterfaces\HubServiceInterfaces.csproj" />
+    <ProjectReference Include="..\Api\HubServiceInterfaces\HubServiceApi.csproj" />
   </ItemGroup>
 
 </Project>

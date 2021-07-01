@@ -5,13 +5,15 @@ using Microsoft.Extensions.Hosting;
 
 namespace Server
 {
-    #region Startup
     public class Startup
     {
+        #region Methods
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSignalR();
-            services.AddHostedService<Worker>();
+
+            services.AddHostedService<DataProducingBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -22,12 +24,9 @@ namespace Server
             }
 
             app.UseRouting();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapHub<ClockHub>("/hubs/clock");
-                //endpoints.MapHub<ClockHub>("/ChatHub");
-            });
+            app.UseEndpoints(endpoints => endpoints.MapHub<SimulationDataHub>(HubServiceApi.Strings.TestHubPath));
         }
+
+        #endregion
     }
-    #endregion
 }
